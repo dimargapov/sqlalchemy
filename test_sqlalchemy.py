@@ -51,5 +51,24 @@ def user_sign_in():
     session.commit()
     return jsonify({"msg": "User added succesfully!"}), 200
 
+@app.route('/login', methods=['POST'])
+def user_sign_up():
+    username = request.form['username']
+    password = request.form['password']
+    if not username or not password:
+        return jsonify({"msg": "Username or Password are required!"})
+    expires=timedelta(days=3)
+    logged_user = session.query(User).filter(User.username == username).first()
+    if logged_user and check_password_hash(logged_user.password, password):
+        token = create_access_token(identity=logged_user.id, expires_delta=expires)
+        return jsonify(token)
+    else:
+        return jsonify({"msg": "Username or password isn't valid!"})
+    
+@app.route('/protected')
+@jwt_required()
+def protected_get():
+    return jsonify({"msg": "Successfully Authorizated!"})
+
 if __name__ == '__main__':
     app.run(debug=True)
